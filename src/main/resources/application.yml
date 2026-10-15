@@ -1,3 +1,58 @@
 spring:
   application:
     name: kioskonube-ordenes-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:kioskonube}
+    username: ${DB_USER:kioskoadmin}
+    password: ${DB_PASSWORD:}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update            # crea/actualiza las tablas a partir de las entidades
+    properties:
+      hibernate:
+        default_schema: ordenes   # schema propio de este microservicio
+        hbm2ddl:
+          create_namespaces: true # crea el schema si no existe
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: 5672
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 5
+        default-requeue-rejected: false
+
+server:
+  port: 8083
+
+# Nombres de mensajería centralizados
+kioskonube:
+  mensajeria:
+    ordenes:                      # lo que este servicio PUBLICA
+      exchange: ordenes.exchange
+      routing-key: orden.creada
+    notificaciones:               # PUBLICA hacia notificaciones-service
+      exchange: notificaciones.exchange
+      routing-key: notificacion.enviar
+    checkout:                     # lo que este servicio CONSUME desde carrito
+      exchange: carrito.exchange
+      queue: ordenes.checkout.queue
+      routing-key: carrito.checkout
+    despachos:                    # lo que este servicio CONSUME desde despachos
+      exchange: despachos.exchange
+      queue: ordenes.despachos.queue
+      routing-key: despacho.actualizado
+    dead-letter:
+      dlx-sufijo: .dlx
+      dlq-sufijo: .dlq
+
+  ordenes:
+    reintentos:
+      max-intentos: 3
+      espera-ms: 2000
