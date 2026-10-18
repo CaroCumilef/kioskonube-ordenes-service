@@ -28,6 +28,13 @@ spring:
         prefetch: 5
         default-requeue-rejected: false
 
+  # Seguridad: el JWT lo emite Amazon Cognito (IDaaS)
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${COGNITO_ISSUER:https://cognito-idp.us-east-1.amazonaws.com/us-east-1_fWu8FjuqE}
+
 server:
   port: 8083
 
